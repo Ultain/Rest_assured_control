@@ -1,11 +1,15 @@
 package tests;
 
 import io.restassured.response.Response;
+import logic.common.GsonHandler;
+import logic.responses.ResponceTranslate;
 import org.testng.annotations.AfterClass;
 import org.testng.annotations.BeforeClass;
 import org.testng.annotations.Test;
 
+import java.util.Arrays;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 import static io.restassured.RestAssured.given;
@@ -14,6 +18,8 @@ import static logic.common.EndPoints.TRANSLATE_TEXT;
 import static logic.constants.HeadersLabels.RAPIDAPI_HOST;
 import static logic.constants.HeadersLabels.RAPIDAPI_KEY;
 import static logic.constants.TranslateTextParams.*;
+import static org.hamcrest.MatcherAssert.assertThat;
+import static org.hamcrest.core.Is.is;
 
 public class TranslateTextTest {
 
@@ -49,6 +55,11 @@ public class TranslateTextTest {
                 .then()
                 .log().all()
                 .extract().response();
+
+        List<ResponceTranslate> list =
+                Arrays.asList(GsonHandler.getResponce(response.getBody().asString(), ResponceTranslate.class));
+
+        assertThat(list.stream().anyMatch(o->o.getT().contains("лінкор Королівського флоту")), is(true));
 
     }
 
