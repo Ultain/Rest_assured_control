@@ -1,15 +1,13 @@
 package tests;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import io.restassured.response.Response;
-import logic.common.GsonHandler;
-import logic.responses.ResponceTranslate;
 import org.testng.annotations.AfterClass;
 import org.testng.annotations.BeforeClass;
 import org.testng.annotations.Test;
 
-import java.util.Arrays;
 import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
 
 import static io.restassured.RestAssured.given;
@@ -56,10 +54,21 @@ public class TranslateTextTest {
                 .log().all()
                 .extract().response();
 
-        List<ResponceTranslate> list =
+        // GSON
+/*        List<ResponceTranslate> list =
                 Arrays.asList(GsonHandler.getResponce(response.getBody().asString(), ResponceTranslate.class));
 
-        assertThat(list.stream().anyMatch(o->o.getT().contains("лінкор Королівського флоту")), is(true));
+        assertThat(list.stream().anyMatch(o->o., is(true));*/
+
+        // Jackson
+        Map<String, Object> translateInfo = null;
+        try {
+            translateInfo = new ObjectMapper().readValue(response.getBody().asString(), HashMap.class);
+        } catch (JsonProcessingException e) {
+            e.printStackTrace();
+        }
+
+        assertThat(Integer.parseInt(translateInfo.get("code").toString()), is(200));
 
     }
 
