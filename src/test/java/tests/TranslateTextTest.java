@@ -1,15 +1,13 @@
 package tests;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import io.restassured.response.Response;
-import logic.common.GsonHandler;
-import logic.responses.ResponceTranslate;
 import org.testng.annotations.AfterClass;
 import org.testng.annotations.BeforeClass;
 import org.testng.annotations.Test;
 
-import java.util.Arrays;
 import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
 
 import static io.restassured.RestAssured.given;
@@ -23,24 +21,22 @@ import static org.hamcrest.core.Is.is;
 
 public class TranslateTextTest {
 
+    Map<String, String> headers = new HashMap<>();
+
     @BeforeClass
     public void install(){
-
+        headers.put(RAPIDAPI_HOST.getLabel(), BASIC_USER.getHost());
+        headers.put(RAPIDAPI_KEY.getLabel(), BASIC_USER.getKey());
     }
 
     @AfterClass
     public void clean(){
-
     }
 
     @Test
     public void test01withValidData(){
 
         // С набором валидных данных
-        Map<String, String> headers = new HashMap<>();
-        headers.put(RAPIDAPI_HOST.getLabel(), BASIC_USER.getHost());
-        headers.put(RAPIDAPI_KEY.getLabel(), BASIC_USER.getKey());
-
         Map<String, String> queryParams = new HashMap<>();
         queryParams.put(TEXT_LABEL.getParam(), ENGLISH_TEXT.getParam());
         queryParams.put(TARGET_LANG.getParam(), UKRAINIAN.getParam());
@@ -56,10 +52,15 @@ public class TranslateTextTest {
                 .log().all()
                 .extract().response();
 
-        List<ResponceTranslate> list =
-                Arrays.asList(GsonHandler.getResponce(response.getBody().asString(), ResponceTranslate.class));
+        // Jackson
+        Map<String, Object> translateInfo = null;
+        try {
+            translateInfo = new ObjectMapper().readValue(response.getBody().asString(), HashMap.class);
+        } catch (JsonProcessingException e) {
+            e.printStackTrace();
+        }
 
-        assertThat(list.stream().anyMatch(o->o.getT().contains("лінкор Королівського флоту")), is(true));
+        assertThat(Integer.parseInt(translateInfo.get("code").toString()), is(200));
 
     }
 
@@ -67,10 +68,6 @@ public class TranslateTextTest {
     public void test02withInvalidText(){
 
         // С не валидным текстом (возвращает не переведенный текст)
-        Map<String, String> headers = new HashMap<>();
-        headers.put(RAPIDAPI_HOST.getLabel(), BASIC_USER.getHost());
-        headers.put(RAPIDAPI_KEY.getLabel(), BASIC_USER.getKey());
-
         Map<String, String> queryParams = new HashMap<>();
         queryParams.put(TEXT_LABEL.getParam(), DEUTSCH_TEXT.getParam());
         queryParams.put(TARGET_LANG.getParam(), UKRAINIAN.getParam());
@@ -92,10 +89,6 @@ public class TranslateTextTest {
     public void test03withInvalidText(){
 
         // С английским текстом перевод прокатывает
-        Map<String, String> headers = new HashMap<>();
-        headers.put(RAPIDAPI_HOST.getLabel(), BASIC_USER.getHost());
-        headers.put(RAPIDAPI_KEY.getLabel(), BASIC_USER.getKey());
-
         Map<String, String> queryParams = new HashMap<>();
         queryParams.put(TEXT_LABEL.getParam(), ENGLISH_TEXT.getParam());
         queryParams.put(TARGET_LANG.getParam(), UKRAINIAN.getParam());
@@ -117,10 +110,6 @@ public class TranslateTextTest {
     public void test04withInvalidSourceLang(){
 
         // С неправильным параметром исходного языка - "message": "The language 'mur' is not supported"
-        Map<String, String> headers = new HashMap<>();
-        headers.put(RAPIDAPI_HOST.getLabel(), BASIC_USER.getHost());
-        headers.put(RAPIDAPI_KEY.getLabel(), BASIC_USER.getKey());
-
         Map<String, String> queryParams = new HashMap<>();
         queryParams.put(TEXT_LABEL.getParam(), ENGLISH_TEXT.getParam());
         queryParams.put(TARGET_LANG.getParam(), UKRAINIAN.getParam());

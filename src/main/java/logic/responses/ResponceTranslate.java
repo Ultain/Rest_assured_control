@@ -12,12 +12,16 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor(access = AccessLevel.PUBLIC)
 public class ResponceTranslate {
 
-    @SerializedName("s")
+    @SerializedName("code")
     @Expose
-    private String s;
+    private Integer code;
 
-    @SerializedName("t")
+    @SerializedName("data")
     @Expose
-    private String t;
+    private Data data;
+
+    @SerializedName("message")
+    @Expose
+    private String message;
 
 }
