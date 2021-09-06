@@ -2,11 +2,17 @@ package tests;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.google.gson.Gson;
+import com.google.gson.JsonElement;
+import com.google.gson.JsonObject;
+import com.google.gson.JsonParser;
 import io.restassured.response.Response;
+import logic.responses.ResponceTranslate;
 import org.testng.annotations.AfterClass;
 import org.testng.annotations.BeforeClass;
 import org.testng.annotations.Test;
 
+import java.io.*;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -52,6 +58,17 @@ public class TranslateTextTest {
                 .log().all()
                 .extract().response();
 
+        // GSON
+/*        ResponceTranslate responceTranslate = GsonHandler.getResponce(response.getBody().asString(), ResponceTranslate.class);
+
+        assertThat(responceTranslate.getMessage().contains(""), is(true));
+        */
+/*        List<ResponceTranslate> list =
+                Arrays.asList(GsonHandler.getResponce(response.getBody().asString(), ResponceTranslate.class));
+
+        assertThat(list.stream().anyMatch(o->o.getMessage().contains("")), is(true));
+        */
+
         // Jackson
         Map<String, Object> translateInfo = null;
         try {
@@ -61,6 +78,37 @@ public class TranslateTextTest {
         }
 
         assertThat(Integer.parseInt(translateInfo.get("code").toString()), is(200));
+
+        // Gson
+
+        // typing response to file "data.json"
+        try(FileWriter writer = new FileWriter("src/test/resources/data.json", false))
+        {
+            writer.write(response.getBody().asString());
+            writer.flush();
+        }
+        catch(IOException ex){
+            System.out.println(ex.getMessage());
+        }
+
+        // making assertion with getTranslation method using Gson parser
+        File input = new File("src/test/resources/data.json");
+        try {
+            JsonElement fileElement = JsonParser.parseReader(new FileReader(input));
+            JsonObject fileObject = fileElement.getAsJsonObject();
+
+            //Integer code = fileObject.get("code").getAsInt();
+            //String data = fileObject.get("data").toString();
+
+            ResponceTranslate responceTranslate1 = new Gson().fromJson(fileElement, ResponceTranslate.class);
+
+            System.out.println("Translation Gson'a: " + responceTranslate1.getData().getTranslation().toString());
+
+            assertThat(responceTranslate1.getData().getTranslation().contains("HMS Royal Oak"), is(true));
+
+        } catch (FileNotFoundException e) {
+            e.printStackTrace();
+        }
 
     }
 
